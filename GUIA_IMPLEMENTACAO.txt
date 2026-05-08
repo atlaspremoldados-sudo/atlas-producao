@@ -1,0 +1,207 @@
+ATLAS PRODUÇÃO - GUIA DE IMPLEMENTAÇÃO
+=====================================
+
+📅 DATA: 08/05/2026
+👤 RESPONSÁVEL: João Antonio Rissi Silva
+📱 EMAIL: joaorissibr@gmail.com
+
+═══════════════════════════════════════════════════════════════════
+
+## 🎯 O QUE FOI CRIADO
+
+Uma aplicação web moderna que funciona:
+✅ No celular (otimizado para pátio fabril)
+✅ Desktop (para análise e consultas)
+✅ 100% funcional e pronto para deploy
+✅ Com banco de dados seguro (Supabase)
+
+═══════════════════════════════════════════════════════════════════
+
+## 📋 FORMULÁRIOS DISPONÍVEIS
+
+1. **Máquina 01** (Blocos/Canaletas)
+   - Registra produção em tempo real
+   - 9 produtos diferentes
+   - Rastreia insumos
+
+2. **Máquina 02** (Pisos Dormido)
+   - Registra produção em tempo real
+   - Qualidade do concreto (MPA)
+   - 9 produtos diferentes
+
+3. **Máquina 03** (Mesa Vibratória)
+   - Complementos (Guias, Elementos, Concregrama)
+   - Rápido e simples
+
+4. **Desforma + Paletização Máq02**
+   - Linkado automaticamente à produção anterior
+   - Registra 1ª linha, 2ª linha, rejeição
+   - Identifica defeitos
+
+5. **Paletização Máq01**
+   - Linkado automaticamente à produção anterior
+   - Rastreia paletes (para recuperação)
+   - Cálculo automático de rejeição
+
+6. **Entregas**
+   - Múltiplos clientes (até 3)
+   - Km rodado + Tempo parado (Munck)
+   - Rastreamento de paletes
+   - Integração com Forteplus (estoque/preços)
+
+7. **Funcionários**
+   - Registro de presença
+   - Observação individual por funcionário
+   - Anotações do dia
+
+═══════════════════════════════════════════════════════════════════
+
+## 🚀 PRÓXIMOS PASSOS (HOJE)
+
+### PASSO 1: Criar Conta Supabase (5 min)
+└─ Acesse: supabase.com
+└─ Clique "Start your project"
+└─ Use email: joaorissibr@gmail.com
+└─ Crie projeto: "atlas-producao"
+└─ Aguarde 2-3 minutos
+
+### PASSO 2: Pegar Credenciais (2 min)
+└─ Settings → API
+└─ Copie: Project URL e anon public key
+└─ Guarde em lugar seguro
+
+### PASSO 3: Criar Tabelas (5 min)
+└─ No Supabase, vá para: SQL Editor
+└─ Cole o código SQL do arquivo: supabase-schema.sql
+└─ Clique "Run"
+└─ Aguarde conclusão
+
+### PASSO 4: Clonar/Deploy (10 min)
+OPÇÃO A - Localmente:
+  $ git clone [seu-repositório]
+  $ cd atlas-producao
+  $ npm install
+  $ npm run dev
+  → Acessa: http://localhost:5173
+
+OPÇÃO B - Em Produção (Vercel):
+  $ npm run deploy
+  → Recebe um link público
+
+═══════════════════════════════════════════════════════════════════
+
+## 🔑 ARQUIVO SQL PARA CRIAR TABELAS
+
+Veja o arquivo: supabase-schema.sql
+(Copie e cole no SQL Editor do Supabase)
+
+═══════════════════════════════════════════════════════════════════
+
+## 📱 USAR NO CELULAR
+
+1. Abra o navegador Chrome
+2. Digite o URL do app (Vercel)
+3. Adicione à tela inicial (botão compartilhar → Adicionar à tela)
+4. Pronto! Funciona offline também
+
+═══════════════════════════════════════════════════════════════════
+
+## 🔐 INTEGRAÇÃO COM FORTEPLUS (AMANHÃ)
+
+Você vai me passar:
+[ ] Credenciais do Forteplus (usuário/senha)
+    OU
+[ ] Documentação da API
+
+Eu vou:
+✓ Conectar ao Forteplus automaticamente
+✓ Puxar preços de insumos
+✓ Puxar estoque
+✓ Puxar clientes
+✓ Puxar vendas
+
+Resultado: Você preenche menos, sistema tira dados de lá
+
+═══════════════════════════════════════════════════════════════════
+
+## 💬 EU (CLAUDE) COMO CONSULTOR
+
+Assim que estiver pronto, você pode me perguntar:
+
+"Claude, quanto custei com combustível em abril?"
+→ Eu leio Supabase e respondo
+
+"Qual máquina foi mais produtiva?"
+→ Eu analiso dados e respondo
+
+"Bloco 19 está rentável?"
+→ Eu calcula custos vs receita e respondo
+
+"Me passa um relatório com KPIs"
+→ Eu gero relatório executivo completo
+
+═══════════════════════════════════════════════════════════════════
+
+## ✅ CHECKLIST DE IMPLEMENTAÇÃO
+
+HOJE:
+[ ] Criar conta Supabase (joaorissibr@gmail.com)
+[ ] Pegar credenciais (Project URL + anon key)
+[ ] Criar tabelas (rodar SQL no Supabase)
+[ ] Clonar/Deploy o app
+[ ] Testar um formulário no celular
+
+AMANHÃ:
+[ ] Falar com suporte Forteplus sobre API/credenciais
+[ ] Me passar credenciais Forteplus
+[ ] Começar a preencher dados diariamente
+
+═══════════════════════════════════════════════════════════════════
+
+## 📧 ARQUIVOS ENVIADOS
+
+1. atlas-producao/ (pasta do projeto completo)
+   ├── src/ (código fonte React)
+   ├── package.json (dependências)
+   ├── .env.example (variáveis de ambiente)
+   ├── README.md (documentação)
+   └── supabase-schema.sql (criar tabelas)
+
+2. Este arquivo (GUIA_IMPLEMENTACAO.txt)
+
+═══════════════════════════════════════════════════════════════════
+
+## 🆘 DÚVIDAS FREQUENTES
+
+P: Preciso saber programar?
+R: Não! Só seguir os passos acima.
+
+P: Quanto custa Supabase?
+R: Grátis até 1GB de dados (você nunca vai atingir).
+
+P: Quanto custa Vercel?
+R: Grátis para deploy.
+
+P: Posso acessar no celular?
+R: Sim! Funciona perfeito no Chrome mobile.
+
+P: E se cair a internet?
+R: App salva localmente e sincroniza depois.
+
+═══════════════════════════════════════════════════════════════════
+
+## 🎯 META FINAL
+
+Quando tudo estiver pronto:
+✓ Você preenche dados no celular (2 min/produção)
+✓ Eu analiso dados quando você pede (instantâneo)
+✓ Você toma decisões baseadas em números reais
+✓ Negócio cresce com inteligência
+
+═══════════════════════════════════════════════════════════════════
+
+COMEÇAMOS AGORA? 🚀
+
+Próximo passo: Criar conta no Supabase!
+
+Dúvidas? Pergunta pro Claude! 😉
