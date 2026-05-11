@@ -4,7 +4,8 @@ export interface ProducaoMaq01 {
   id?: string;
   data: string;
   turno: 'Manhã' | 'Tarde' | 'Noite';
-  produto: string;
+  produto_id?: string; // FK para produtos (catalogo Supabase)
+  produto: string;     // nome em texto, preenchido a partir do catalogo
   hora_inicio: string;
   hora_fim_mistura: string;
   hora_fim_maquina: string;
@@ -24,6 +25,7 @@ export interface ProducaoMaq02 {
   id?: string;
   data: string;
   turno: 'Manhã' | 'Tarde' | 'Noite';
+  produto_id?: string;
   produto: string;
   hora_inicio: string;
   hora_fim: string;
@@ -40,6 +42,7 @@ export interface ProducaoMaq03 {
   id?: string;
   data: string;
   turno: 'Manhã' | 'Tarde' | 'Noite';
+  produto_id?: string;
   produto: string;
   hora_inicio: string;
   hora_fim: string;
@@ -50,6 +53,10 @@ export interface ProducaoMaq03 {
   updated_at?: string;
 }
 
+// DEPRECATED — listas hardcoded mantidas so para compatibilidade durante a
+// transicao. Use o hook useProdutos('Maq0X') que le os 47 SKUs do catalogo.
+
+/** @deprecated Use useProdutos('Maq01'). */
 export const PRODUTOS_MAQ01 = [
   'Bloco 14x19x39 Estrutural',
   'Bloco 14x19x39 Vedação',
@@ -62,6 +69,7 @@ export const PRODUTOS_MAQ01 = [
   'Piso Tijolinho VP 6cm'
 ];
 
+/** @deprecated Use useProdutos('Maq02'). */
 export const PRODUTOS_MAQ02 = [
   'Tijolinho DM 2,5cm Natural',
   'Tijolinho DM 4cm Natural',
@@ -74,6 +82,7 @@ export const PRODUTOS_MAQ02 = [
   'Ossinho'
 ];
 
+/** @deprecated Use useProdutos('Maq03'). */
 export const PRODUTOS_MAQ03 = [
   'Guia Sarjeta 80x30x10',
   'Guia Sarjeta 80x30x08',
