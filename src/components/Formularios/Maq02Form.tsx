@@ -1,17 +1,20 @@
 // src/components/Formularios/Maq02Form.tsx
 
-import React, { useState } from 'react';
-import { PRODUTOS_MAQ02, TURNOS } from '../../types/producao';
+import React, { useEffect, useState } from 'react';
+import { TURNOS } from '../../types/producao';
+import { useProdutos } from '../../hooks/useProdutos';
 import { salvarProducaoMaq02 } from '../../utils/supabase';
 import { format } from 'date-fns';
 
 export default function Maq02Form() {
+  const { produtos, carregando: carregandoProdutos, erro: erroProdutos } = useProdutos('Maq02');
   const [carregando, setCarregando] = useState(false);
   const [mensagem, setMensagem] = useState<{ tipo: 'sucesso' | 'erro'; texto: string } | null>(null);
   const [formData, setFormData] = useState({
     data: format(new Date(), 'yyyy-MM-dd'),
     turno: 'Manhã',
-    produto: PRODUTOS_MAQ02[0],
+    produto_id: '',
+    produto: '',
     hora_inicio: '',
     hora_fim: '',
     quantidade: '',
@@ -20,9 +23,30 @@ export default function Maq02Form() {
     observacoes: '',
   });
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+  useEffect(() => {
+    if (!formData.produto_id && produtos.length > 0) {
+      setFormData((prev) => ({
+        ...prev,
+        produto_id: produtos[0].id,
+        produto: produtos[0].nome,
+      }));
+    }
+  }, [produtos, formData.produto_id]);
+
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
+  ) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    if (name === 'produto_id') {
+      const sel = produtos.find((p) => p.id === value);
+      setFormData((prev) => ({
+        ...prev,
+        produto_id: value,
+        produto: sel?.nome ?? '',
+      }));
+    } else {
+      setFormData((prev) => ({ ...prev, [name]: value }));
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -31,6 +55,10 @@ export default function Maq02Form() {
     setMensagem(null);
 
     try {
+      if (!formData.produto_id) {
+        throw new Error('Selecione um produto do catálogo.');
+      }
+
       const dadosFormatados = {
         ...formData,
         quantidade: parseFloat(formData.quantidade) || 0,
@@ -45,10 +73,12 @@ export default function Maq02Form() {
         texto: '✅ Produção Maq02 salva com sucesso!',
       });
 
+      const primeiroProduto = produtos[0];
       setFormData({
         data: format(new Date(), 'yyyy-MM-dd'),
         turno: 'Manhã',
-        produto: PRODUTOS_MAQ02[0],
+        produto_id: primeiroProduto?.id ?? '',
+        produto: primeiroProduto?.nome ?? '',
         hora_inicio: '',
         hora_fim: '',
         quantidade: '',
@@ -78,6 +108,12 @@ export default function Maq02Form() {
         </div>
       )}
 
+      {erroProdutos && (
+        <div className="p-4 rounded-lg font-medium bg-red-100 text-red-800">
+          ❌ Não foi possível carregar o catálogo de produtos: {erroProdutos}
+        </div>
+      )}
+
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
@@ -94,8 +130,23 @@ export default function Maq02Form() {
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">Produto *</label>
-          <select name="produto" value={formData.produto} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500">
-            {PRODUTOS_MAQ02.map((produto) => <option key={produto} value={produto}>{produto}</option>)}
+          <select
+            name="produto_id"
+            value={formData.produto_id}
+            onChange={handleChange}
+            required
+            disabled={carregandoProdutos}
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 disabled:bg-gray-100"
+          >
+            {carregandoProdutos && <option value="">Carregando produtos...</option>}
+            {!carregandoProdutos && produtos.length === 0 && (
+              <option value="">Nenhum produto cadastrado para Maq02</option>
+            )}
+            {produtos.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.codigo} — {p.nome}
+              </option>
+            ))}
           </select>
         </div>
 
@@ -136,7 +187,7 @@ export default function Maq02Form() {
           <textarea name="observacoes" value={formData.observacoes} onChange={handleChange} placeholder="Adicione observações relevantes..." rows={3} className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500" />
         </div>
 
-        <button type="submit" disabled={carregando} className="w-full bg-yellow-600 hover:bg-yellow-700 disabled:bg-gray-400 text-white font-bold py-3 px-4 rounded-lg transition-all">
+        <button type="submit" disabled={carregando || carregandoProdutos} className="w-full bg-yellow-600 hover:bg-yellow-700 disabled:bg-gray-400 text-white font-bold py-3 px-4 rounded-lg transition-all">
           {carregando ? '⏳ Salvando...' : '✅ Salvar Produção'}
         </button>
       </form>
