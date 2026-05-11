@@ -1,17 +1,20 @@
 // src/components/Formularios/Maq01Form.tsx
 
-import React, { useState } from 'react';
-import { PRODUTOS_MAQ01, TURNOS } from '../../types/producao';
+import React, { useEffect, useState } from 'react';
+import { TURNOS } from '../../types/producao';
+import { useProdutos } from '../../hooks/useProdutos';
 import { salvarProducaoMaq01 } from '../../utils/supabase';
 import { format } from 'date-fns';
 
 export default function Maq01Form() {
+  const { produtos, carregando: carregandoProdutos, erro: erroProdutos } = useProdutos('Maq01');
   const [carregando, setCarregando] = useState(false);
   const [mensagem, setMensagem] = useState<{ tipo: 'sucesso' | 'erro'; texto: string } | null>(null);
   const [formData, setFormData] = useState({
     data: format(new Date(), 'yyyy-MM-dd'),
     turno: 'Manhã',
-    produto: PRODUTOS_MAQ01[0],
+    produto_id: '',
+    produto: '',
     hora_inicio: '',
     hora_fim_mistura: '',
     hora_fim_maquina: '',
@@ -25,12 +28,30 @@ export default function Maq01Form() {
     observacoes: '',
   });
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+  useEffect(() => {
+    if (!formData.produto_id && produtos.length > 0) {
+      setFormData((prev) => ({
+        ...prev,
+        produto_id: produtos[0].id,
+        produto: produtos[0].nome,
+      }));
+    }
+  }, [produtos, formData.produto_id]);
+
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
+  ) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    if (name === 'produto_id') {
+      const sel = produtos.find((p) => p.id === value);
+      setFormData((prev) => ({
+        ...prev,
+        produto_id: value,
+        produto: sel?.nome ?? '',
+      }));
+    } else {
+      setFormData((prev) => ({ ...prev, [name]: value }));
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -39,6 +60,10 @@ export default function Maq01Form() {
     setMensagem(null);
 
     try {
+      if (!formData.produto_id) {
+        throw new Error('Selecione um produto do catálogo.');
+      }
+
       const dadosFormatados = {
         ...formData,
         numero_tabuas: parseInt(formData.numero_tabuas) || 0,
@@ -56,11 +81,12 @@ export default function Maq01Form() {
         texto: '✅ Produção Maq01 salva com sucesso!',
       });
 
-      // Resetar formulário
+      const primeiroProduto = produtos[0];
       setFormData({
         data: format(new Date(), 'yyyy-MM-dd'),
         turno: 'Manhã',
-        produto: PRODUTOS_MAQ01[0],
+        produto_id: primeiroProduto?.id ?? '',
+        produto: primeiroProduto?.nome ?? '',
         hora_inicio: '',
         hora_fim_mistura: '',
         hora_fim_maquina: '',
@@ -74,7 +100,6 @@ export default function Maq01Form() {
         observacoes: '',
       });
 
-      // Limpar mensagem após 3 segundos
       setTimeout(() => setMensagem(null), 3000);
     } catch (erro: any) {
       setMensagem({
@@ -93,7 +118,6 @@ export default function Maq01Form() {
         <p className="text-blue-700">Blocos e Canaletas (Massa Seca)</p>
       </div>
 
-      {/* Mensagens */}
       {mensagem && (
         <div
           className={`p-4 rounded-lg font-medium ${
@@ -106,233 +130,111 @@ export default function Maq01Form() {
         </div>
       )}
 
+      {erroProdutos && (
+        <div className="p-4 rounded-lg font-medium bg-red-100 text-red-800">
+          ❌ Não foi possível carregar o catálogo de produtos: {erroProdutos}
+        </div>
+      )}
+
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Row 1: Data e Turno */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Data *
-            </label>
-            <input
-              type="date"
-              name="data"
-              value={formData.data}
-              onChange={handleChange}
-              required
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
+            <label className="block text-sm font-medium text-gray-700 mb-2">Data *</label>
+            <input type="date" name="data" value={formData.data} onChange={handleChange} required className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Turno *
-            </label>
-            <select
-              name="turno"
-              value={formData.turno}
-              onChange={handleChange}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            >
-              {TURNOS.map((turno) => (
-                <option key={turno} value={turno}>
-                  {turno}
-                </option>
-              ))}
+            <label className="block text-sm font-medium text-gray-700 mb-2">Turno *</label>
+            <select name="turno" value={formData.turno} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+              {TURNOS.map((turno) => (<option key={turno} value={turno}>{turno}</option>))}
             </select>
           </div>
         </div>
 
-        {/* Row 2: Produto */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Produto *
-          </label>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Produto *</label>
           <select
-            name="produto"
-            value={formData.produto}
+            name="produto_id"
+            value={formData.produto_id}
             onChange={handleChange}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            required
+            disabled={carregandoProdutos}
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100"
           >
-            {PRODUTOS_MAQ01.map((produto) => (
-              <option key={produto} value={produto}>
-                {produto}
-              </option>
+            {carregandoProdutos && <option value="">Carregando produtos...</option>}
+            {!carregandoProdutos && produtos.length === 0 && (
+              <option value="">Nenhum produto cadastrado para Maq01</option>
+            )}
+            {produtos.map((p) => (
+              <option key={p.id} value={p.id}>{p.codigo} — {p.nome}</option>
             ))}
           </select>
         </div>
 
-        {/* Row 3: Horários */}
         <div className="bg-gray-50 p-4 rounded-lg space-y-4">
           <h3 className="font-medium text-gray-900">Horários</h3>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1">
-                Hora Início *
-              </label>
-              <input
-                type="time"
-                name="hora_inicio"
-                value={formData.hora_inicio}
-                onChange={handleChange}
-                required
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-              />
+              <label className="block text-xs font-medium text-gray-700 mb-1">Hora Início *</label>
+              <input type="time" name="hora_inicio" value={formData.hora_inicio} onChange={handleChange} required className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" />
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1">
-                Fim Mistura *
-              </label>
-              <input
-                type="time"
-                name="hora_fim_mistura"
-                value={formData.hora_fim_mistura}
-                onChange={handleChange}
-                required
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-              />
+              <label className="block text-xs font-medium text-gray-700 mb-1">Fim Mistura *</label>
+              <input type="time" name="hora_fim_mistura" value={formData.hora_fim_mistura} onChange={handleChange} required className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" />
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1">
-                Fim Máquina *
-              </label>
-              <input
-                type="time"
-                name="hora_fim_maquina"
-                value={formData.hora_fim_maquina}
-                onChange={handleChange}
-                required
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-              />
+              <label className="block text-xs font-medium text-gray-700 mb-1">Fim Máquina *</label>
+              <input type="time" name="hora_fim_maquina" value={formData.hora_fim_maquina} onChange={handleChange} required className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" />
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1">
-                Fim Limpeza *
-              </label>
-              <input
-                type="time"
-                name="hora_fim_limpeza"
-                value={formData.hora_fim_limpeza}
-                onChange={handleChange}
-                required
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-              />
+              <label className="block text-xs font-medium text-gray-700 mb-1">Fim Limpeza *</label>
+              <input type="time" name="hora_fim_limpeza" value={formData.hora_fim_limpeza} onChange={handleChange} required className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" />
             </div>
           </div>
         </div>
 
-        {/* Row 4: Produção */}
         <div className="bg-gray-50 p-4 rounded-lg space-y-4">
           <h3 className="font-medium text-gray-900">Resultado Produção</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Número de Tábuas *
-              </label>
-              <input
-                type="number"
-                name="numero_tabuas"
-                value={formData.numero_tabuas}
-                onChange={handleChange}
-                required
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-              />
+              <label className="block text-sm font-medium text-gray-700 mb-2">Número de Tábuas *</label>
+              <input type="number" name="numero_tabuas" value={formData.numero_tabuas} onChange={handleChange} required className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Quantidade para Cura (blocos) *
-              </label>
-              <input
-                type="number"
-                name="quantidade_cura"
-                value={formData.quantidade_cura}
-                onChange={handleChange}
-                required
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-              />
+              <label className="block text-sm font-medium text-gray-700 mb-2">Quantidade para Cura (blocos) *</label>
+              <input type="number" name="quantidade_cura" value={formData.quantidade_cura} onChange={handleChange} required className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" />
             </div>
           </div>
         </div>
 
-        {/* Row 5: Insumos */}
         <div className="bg-gray-50 p-4 rounded-lg space-y-4">
           <h3 className="font-medium text-gray-900">Insumos Utilizados</h3>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1">
-                Cimento (sacos)
-              </label>
-              <input
-                type="number"
-                step="0.1"
-                name="cimento_sacos"
-                value={formData.cimento_sacos}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-              />
+              <label className="block text-xs font-medium text-gray-700 mb-1">Cimento (sacos)</label>
+              <input type="number" step="0.1" name="cimento_sacos" value={formData.cimento_sacos} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" />
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1">
-                Areia (ton)
-              </label>
-              <input
-                type="number"
-                step="0.1"
-                name="areia"
-                value={formData.areia}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-              />
+              <label className="block text-xs font-medium text-gray-700 mb-1">Areia (ton)</label>
+              <input type="number" step="0.1" name="areia" value={formData.areia} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" />
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1">
-                Pó de Brita (ton)
-              </label>
-              <input
-                type="number"
-                step="0.1"
-                name="po_brita"
-                value={formData.po_brita}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-              />
+              <label className="block text-xs font-medium text-gray-700 mb-1">Pó de Brita (ton)</label>
+              <input type="number" step="0.1" name="po_brita" value={formData.po_brita} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" />
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1">
-                Aditivo (kg)
-              </label>
-              <input
-                type="number"
-                step="0.01"
-                name="aditivo"
-                value={formData.aditivo}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-              />
+              <label className="block text-xs font-medium text-gray-700 mb-1">Aditivo (kg)</label>
+              <input type="number" step="0.001" name="aditivo" value={formData.aditivo} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" />
             </div>
           </div>
         </div>
 
-        {/* Row 6: Observações */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Observações (opcional)
-          </label>
-          <textarea
-            name="observacoes"
-            value={formData.observacoes}
-            onChange={handleChange}
-            placeholder="Adicione observações relevantes..."
-            rows={3}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          />
+          <label className="block text-sm font-medium text-gray-700 mb-2">Observações (opcional)</label>
+          <textarea name="observacoes" value={formData.observacoes} onChange={handleChange} placeholder="Adicione observações relevantes..." rows={3} className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
         </div>
 
-        {/* Submit Button */}
         <div className="flex gap-4">
-          <button
-            type="submit"
-            disabled={carregando}
-            className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-bold py-3 px-4 rounded-lg transition-all"
-          >
+          <button type="submit" disabled={carregando || carregandoProdutos} className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-bold py-3 px-4 rounded-lg transition-all">
             {carregando ? '⏳ Salvando...' : '✅ Salvar Produção'}
           </button>
         </div>
