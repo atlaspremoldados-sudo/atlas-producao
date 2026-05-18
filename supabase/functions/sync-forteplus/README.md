@@ -2,7 +2,29 @@
 
 Sincroniza dados read-only do Forteplus para o schema `forteplus.*` no Supabase.
 
-**Módulos implementados:** `produtos` (pr_tipo PA+MP), `vendas` (movimentos_saida), `parceiros` (ps_categoria CLI).
+**Módulos implementados:** `produtos` (pr_tipo PA+MP), `vendas` (movimentos_saida), `parceiros` (ps_categoria CLI), `contas_receber` (financas_receber), `contas_pagar` (financas_pagar).
+
+## Status (18/05/2026)
+
+| Camada | Status |
+|---|---|
+| Edge Function deployada em prod | ✅ |
+| Auth programática (login + assign) | ✅ |
+| Schema `forteplus.*` (8 tabelas) | ✅ migrations 005 + 006 |
+| Carga inicial 12 meses | ✅ 2.547 records |
+| pg_cron diário 06:00 BRT | ✅ migration 007, jobid=1 |
+
+**Endpoint da Edge Function:** `https://whojujjnpaklidkfkpbj.supabase.co/functions/v1/sync-forteplus`
+
+**Próxima execução automática:** todo dia às **09:00 UTC** (06:00 BRT).
+
+**Trigger manual:**
+```bash
+curl -X POST 'https://whojujjnpaklidkfkpbj.supabase.co/functions/v1/sync-forteplus' \
+  -H "Authorization: Bearer <SERVICE_ROLE_KEY>" \
+  -H "Content-Type: application/json" \
+  -d '{"modulos":["parceiros"]}'   # ou {} para todos
+```
 
 ---
 
