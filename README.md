@@ -10,7 +10,7 @@ Um aplicativo moderno, responsivo e otimizado para celular que permite registrar
 
 ### 1. **Clonar o repositório**
 ```bash
-git clone https://github.com/seu-usuario/atlas-producao.git
+git clone https://github.com/atlaspremoldados-sudo/atlas-producao.git
 cd atlas-producao
 ```
 
