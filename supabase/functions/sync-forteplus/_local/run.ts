@@ -15,6 +15,8 @@ import { getSupabaseAdmin } from '../../_shared/supabase-admin.ts';
 import { syncProdutos } from '../modules/produtos.ts';
 import { syncVendas } from '../modules/vendas.ts';
 import { syncParceiros } from '../modules/parceiros.ts';
+import { syncContasReceber } from '../modules/contas-receber.ts';
+import { syncContasPagar } from '../modules/contas-pagar.ts';
 
 const modulo = Deno.args[0] ?? 'produtos';
 
@@ -37,7 +39,11 @@ try {
   if (modulo === 'produtos') result = await syncProdutos(fp, db);
   else if (modulo === 'vendas') result = await syncVendas(fp, db);
   else if (modulo === 'parceiros') result = await syncParceiros(fp, db);
-  else throw new Error(`Módulo desconhecido: ${modulo}. Use: produtos | vendas | parceiros`);
+  else if (modulo === 'contas_receber') result = await syncContasReceber(fp, db);
+  else if (modulo === 'contas_pagar') result = await syncContasPagar(fp, db);
+  else throw new Error(
+    `Módulo desconhecido: ${modulo}. Use: produtos | vendas | parceiros | contas_receber | contas_pagar`
+  );
 
   const duracao = ((Date.now() - inicio) / 1000).toFixed(1);
   console.log(`[run] ok em ${duracao}s`);

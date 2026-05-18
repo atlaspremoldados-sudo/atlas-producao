@@ -21,13 +21,17 @@ import { getSupabaseAdmin } from '../_shared/supabase-admin.ts';
 import { syncProdutos, type SyncResult } from './modules/produtos.ts';
 import { syncVendas } from './modules/vendas.ts';
 import { syncParceiros } from './modules/parceiros.ts';
+import { syncContasReceber } from './modules/contas-receber.ts';
+import { syncContasPagar } from './modules/contas-pagar.ts';
 
-type Modulo = 'produtos' | 'vendas' | 'parceiros';
+type Modulo = 'produtos' | 'vendas' | 'parceiros' | 'contas_receber' | 'contas_pagar';
 
 const SYNCERS: Record<Modulo, typeof syncProdutos> = {
   produtos: syncProdutos,
   vendas: syncVendas,
   parceiros: syncParceiros,
+  contas_receber: syncContasReceber,
+  contas_pagar: syncContasPagar,
 };
 
 interface ModuloResultOk extends SyncResult {
@@ -43,7 +47,8 @@ interface ModuloResultErr {
 serve(async (req) => {
   // Lê body (opcional)
   const body = (await req.json().catch(() => ({}))) as { modulos?: Modulo[] };
-  const modulos: Modulo[] = body.modulos ?? ['produtos', 'vendas', 'parceiros'];
+  const modulos: Modulo[] =
+    body.modulos ?? ['produtos', 'vendas', 'parceiros', 'contas_receber', 'contas_pagar'];
 
   const jwtOverride = Deno.env.get('FORTEPLUS_JWT_OVERRIDE') ?? undefined;
   const fp = new ForteplusClient({

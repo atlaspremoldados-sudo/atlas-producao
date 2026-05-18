@@ -29,7 +29,9 @@ const BROWSER_HEADERS: Record<string, string> = {
 };
 
 interface LoginResponse { access: string }
-interface AssignResponse { access: string }
+// /jwt/assign/ retorna a chave como `token` (não `access` como o login).
+// Capturado em 18/05/2026 via login-test.ts.
+interface AssignResponse { token?: string; access?: string }
 
 export interface PaginatedResponse<T> {
   count: number;
@@ -104,7 +106,13 @@ export class ForteplusClient {
         `Forteplus assign falhou ${assignRes.status}: ${await assignRes.text()}`
       );
     }
-    const { access: jwtFinal } = (await assignRes.json()) as AssignResponse;
+    const assignBody = (await assignRes.json()) as AssignResponse;
+    const jwtFinal = assignBody.token ?? assignBody.access;
+    if (!jwtFinal) {
+      throw new Error(
+        `Forteplus assign sem token/access na response: ${JSON.stringify(assignBody)}`
+      );
+    }
 
     this.jwt = jwtFinal;
     this.jwtExpiresAt = this.parseExp(jwtFinal);

@@ -5,14 +5,26 @@
 
 import type { SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import type { ForteplusClient } from '../../_shared/forteplus-client.ts';
+import { fkId } from '../../_shared/fk-helper.ts';
 import type { SyncResult } from './produtos.ts';
+
+/** FP retorna `pago` como 'S'/'N' (string). Schema espera BOOLEAN. */
+function siNToBool(v: unknown): boolean | null {
+  if (v == null) return null;
+  if (typeof v === 'boolean') return v;
+  if (typeof v === 'string') {
+    if (v === 'S' || v === 's' || v === '1' || v.toLowerCase() === 'true') return true;
+    if (v === 'N' || v === 'n' || v === '0' || v.toLowerCase() === 'false') return false;
+  }
+  return null;
+}
 
 const RECURSO = 'movimentos_saida';
 const WATERMARK_INICIAL = '2025-05-12'; // 12 meses atrás de 2026-05-12
 
 interface FPMovimentoSaida {
   id: number;
-  mv_pessoa?: number;
+  mv_pessoa?: number | { id: number } | null;       // pode vir nested (full parceiro)
   mv_documento?: string;
   mv_serie?: string;
   mv_modelo?: string;
@@ -22,7 +34,7 @@ interface FPMovimentoSaida {
   mv_dma_entrega?: string;
   mv_tipo_movimento?: string;
   mv_tipo_cliente?: string;
-  pago?: boolean;
+  pago?: boolean | string;                           // FP retorna 'S'/'N'
   data_ultima_alteracao?: string;
   hora_ultima_alteracao?: string;
   [k: string]: unknown;
@@ -73,7 +85,7 @@ export async function syncVendas(
         .upsert(
           {
             forteplus_id: m.id,
-            mv_pessoa: m.mv_pessoa ?? null,
+            mv_pessoa: fkId(m.mv_pessoa),
             mv_documento: m.mv_documento ?? null,
             mv_serie: m.mv_serie ?? null,
             mv_modelo: m.mv_modelo ?? null,
@@ -83,7 +95,7 @@ export async function syncVendas(
             mv_dma_entrega: m.mv_dma_entrega ?? null,
             mv_tipo_movimento: m.mv_tipo_movimento ?? null,
             mv_tipo_cliente: m.mv_tipo_cliente ?? null,
-            pago: m.pago ?? null,
+            pago: siNToBool(m.pago),
             data_ultima_alteracao: m.data_ultima_alteracao ?? null,
             hora_ultima_alteracao: m.hora_ultima_alteracao ?? null,
             raw_json: m,
